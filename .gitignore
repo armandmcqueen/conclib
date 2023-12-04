@@ -1,0 +1,8 @@
+.ruff_cache
+
+# https://github.com/github/gitignore/blob/main/Python.gitignore
+__pycache__/
+*.py[cod]
+*$py.class
+
+**/dump.rdb
