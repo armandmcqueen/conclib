@@ -10,11 +10,13 @@ send messages. Eventually add additional observability to the actor framework.
 
 ## Usage - proxy
 
-Setup the proxy and redis infrastructure.
+Set up the proxy and redis infrastructure.
 
 ```python
 import conclib
 
+# Create a config which specifies where redis is running (and some other rarely used 
+# options)  
 config = conclib.DefaultConfig()
 
 # Optionally start redis in a background thread (can 
