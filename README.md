@@ -1,8 +1,8 @@
 # Concurrency Lib
 
-Template for building concurrent systems in Python that use a slightly extended pykka 
-for the actor system.  Provide a way to communicate with the actor system from a 
-different process by using redis (e.g. from a web server that runs in multiple processes).
+Template/library for building concurrent systems in Python that use a slightly extended pykka 
+for the actor system.  Provides a way to communicate with the actor system from a 
+different process via redis (e.g. from a web server that runs in multiple processes).
 
 Extend pykka actors to have uniquely identifiable names (URNs) that can be used to 
 send messages. Eventually add additional observability to the actor framework.
@@ -10,13 +10,19 @@ send messages. Eventually add additional observability to the actor framework.
 
 ## Usage - proxy
 
+In order to communicate with an Actor system from a different process (or machine), 
+we use redis as a message bus and run a proxy that sits between redis and the actors. 
+The proxy listens to redis for messages, forwards them to the correct Actor, and then 
+forwards the response back to the correct location in redis.
+
 Set up the proxy and redis infrastructure.
 
 ```python
 import conclib
+import pykka
 
-# Create a config which specifies where redis is running (and some other rarely used 
-# options)  
+# Create a config which specifies where redis is running 
+# (and some other rarely used options)  
 config = conclib.DefaultConfig()
 
 # Optionally start redis in a background thread (can 
@@ -28,7 +34,10 @@ redis_daemon = conclib.start_redis(config=config)
 # (2) sends response messages back to redis
 conclib.start_proxy(config=config)
 
-# DO STUFF
+# DO YOUR STUFF
+
+# Clean up all the actors (including the proxy) when you are done 
+pykka.ActorRegistry.stop_all()
 
 # Shut down redis when you are done to prevent blocking the main process shutting down
 redis_daemon.shutdown()
@@ -40,21 +49,25 @@ between the actor system and outside the system.
 ```python
 import conclib
 
-class ExampleReqMessage(conclib.ActorMessage):
+class ExampleRequestMessage(conclib.ActorMessage):
     pass
 
-class ExampleRespMessage(conclib.ActorMessage):
+class ExampleResponseMessage(conclib.ActorMessage):
     pass
 ```
 
-Send requests from outside the actor system
+Send requests from outside the actor system. This will block until a response is received 
+via redis. 
+
+`ProxyClient` is probably a slightly misleading name since it only communicates with redis 
+and `start_proxy` implies that redis is not part of the proxy.
 ```python
 import conclib
 
 config = conclib.DefaultConfig()
 client = conclib.ProxyClient(config=config)
-result = client.ask_actor("actor_urn", ExampleReqMessage(), response_type=ExampleRespMessage)
-type(result) # ExampleRespMessage
+result = client.ask_actor("actor_urn", ExampleRequestMessage(), response_type=ExampleResponseMessage)
+type(result) # ExampleResponseMessage
 ```
 
 Handle requests inside the actor system (see ExampleActor below)
@@ -76,15 +89,19 @@ class ExampleActor(conclib.Actor):
         super().__init__(urn=self.URN)
 
     def on_receive(self, message):
-        # Check if the message is a RequestEnvelope (i.e. a message that arrived from outside the actor system)
+        # Check if the message is a RequestEnvelope (i.e. a message that arrived from 
+        # outside the actor system)
         if isinstance(message, conclib.RequestEnvelope):
             req_envelope = message
             # Check which type of message was received and extract it
-            if req_envelope.matches(ExampleReqMessage):
-                actor_message = req_envelope.extract(ExampleReqMessage)
-                type(actor_message)  # ExampleReqMessage
-                # Do something with the message
-                req_envelope.respond(ExampleRespMessage())
+            if req_envelope.matches(ExampleRequestMessage):
+                actor_message = req_envelope.extract(ExampleRequestMessage)
+                type(actor_message)  # ExampleRequestMessage
+                
+                # DO SOMETHING WITH THE MESSAGE
+                
+                # Send a response back to the sender
+                req_envelope.respond(ExampleResponseMessage())
             else:
                 raise RuntimeError("Unknown message type")
                
