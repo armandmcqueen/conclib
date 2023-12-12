@@ -94,7 +94,9 @@ class ExampleActor(conclib.Actor):
 ## Usage - Tickers
 
 A `Ticker` is a thread that runs a function at a regular interval.  In `conclib`, it is 
-designed to look similar to an `Actor`.
+designed to look similar to an `Actor`. The primary use case is to send a message to an 
+`Actor` at a regular interval so that it can have scheduled behavior while still using 
+the Actor paradigm (e.g. handling other tasks, clean shutdown, etc). 
 
 Note: Currently you need to explicitly shut down the `Ticker` in both `Actor.on_stop` and 
 `Actor.on_failure` to make sure `pykka.ActorRegistry.stop_all()` always cleans up all threads. 
