@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "conclib"
-version = "0.0.1"
+version = "0.0.3"
 authors = [
     {name = "Armand McQueen", email = "armandmcqueen@gmail.com"},
 ]
@@ -17,14 +17,17 @@ requires-python = ">=3.11"
 license = {file = "LICENSE"}
 dependencies = [
     'pykka == 4.0.1',
-    'redis[hiredis] ~= 2.2.3',
+    'redis ~= 5.0.1',
     'pydantic ~= 2.5.2',
+    'requests',
 ]
 
 [project.optional-dependencies]
 dev = [
     'ruff ~= 0.1.6',
     'flit ~= 3.9.0',
+    'fastapi == 0.105.0',  # to use the example API server
+    "uvicorn[all] ~= 0.24.0.post1",  # to use the example API server
 
 ]
 
