@@ -35,7 +35,8 @@ redis_daemon.shutdown()
 
 ```
 
-Define the request and response messages
+Define the request and response messages. Do this in a separate file that is shared
+between the actor system and outside the system.
 ```python
 import conclib
 
@@ -87,6 +88,69 @@ class ExampleActor(conclib.Actor):
             else:
                 raise RuntimeError("Unknown message type")
                
+
+```
+
+## Usage - Tickers
+
+A `Ticker` is a thread that runs a function at a regular interval.  In `conclib`, it is 
+designed to look similar to an `Actor`.
+
+Note: Currently you need to explicitly shut down the `Ticker` in both `Actor.on_stop` and 
+`Actor.on_failure` to make sure `pykka.ActorRegistry.stop_all()` always cleans up all threads. 
+I might write a `conclib.ActorRegistry` wrapper around `pykka.ActorRegistry` to make this 
+automatic, if it is painful.
+
+```python
+import conclib
+import pykka
+import datetime
+
+class PrintTimeMessage(conclib.ActorMessage):
+    pass
+
+
+class PrintTimeTicker(conclib.Ticker):
+    """ Tell the PrintTimeActor to print the current time every 1.5 seconds """
+    INTERVAL = 1.5
+
+    def __init__(self, print_time_actor_urn):
+        # Save a pointer to the actor so we can send it messages. An ActorRef would 
+        # work equally well here, I just prefer to reference by URN.
+        self.print_time_actor_urn = print_time_actor_urn
+        # Note that tickers do not have a URN because they are not addressable
+        super().__init__(interval=self.INTERVAL)
+
+    def execute(self):
+        pykka.ActorRegistry.get_by_urn(self.print_time_actor_urn).tell(
+            PrintTimeMessage()
+        )
+
+class PrintTimeActor(conclib.Actor):
+    URN = "print_time_actor"
+
+    def __init__(self):
+        self.ticker = PrintTimeTicker(self.URN)
+        super().__init__(urn=self.URN)
+    
+    def on_start(self):
+        # Start the ticker when the actor starts and not in __init__. This 
+        # prevents actor reference errors.  
+        self.ticker.start()
+    
+    def on_stop(self):
+        # Shut down the ticker when the actor stops
+        self.ticker.stop()
+    
+    def on_failure(self, *args, **kwargs):
+        # Shut down the ticker when the actor fails
+        self.ticker.stop()
+    
+    def on_receive(self, message):
+        if isinstance(message, PrintTimeMessage):
+            print(datetime.datetime.utcnow().isoformat())
+        else:
+            raise RuntimeError("Unknown message type")
 
 ```
 
