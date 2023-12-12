@@ -11,6 +11,7 @@ class RestApiDaemonImplementationError(Exception):
 
     Usually when trying to manipulate the subprocess before it has been created
     """
+
     pass
 
 
@@ -45,10 +46,10 @@ class RestApiDaemonThread(threading.Thread):
         self.fast_api_parent_proc.terminate()
 
     def wait_for_healthy(
-            self,
-            healthcheck_url: str,
-            startup_healthcheck_timeout: int,
-            startup_healthcheck_poll_interval: float = 0.5,
+        self,
+        healthcheck_url: str,
+        startup_healthcheck_timeout: int,
+        startup_healthcheck_poll_interval: float = 0.5,
     ):
         """Query the healthcheck endpoint until either it returns a 200 or we timeout."""
         if not self._run_started:
@@ -69,7 +70,9 @@ class RestApiDaemonThread(threading.Thread):
                     print("✅  REST API is healthy")
                     return
             except requests.exceptions.ConnectionError:
-                print(f"⏳  ConnectionError when trying to connect to {healthcheck_url}")
+                print(
+                    f"⏳  ConnectionError when trying to connect to {healthcheck_url}"
+                )
                 pass
             except requests.exceptions.ReadTimeout:
                 print(f"⌛️ ReadTimeout when trying to connect to {healthcheck_url}")
@@ -81,17 +84,14 @@ class RestApiDaemonThread(threading.Thread):
 
 
 def start_api(
-        fast_api_command: str,
-        healthcheck_url: str,
-        startup_healthcheck_timeout: int,
-        startup_healthcheck_poll_interval: float = 0.5
+    fast_api_command: str,
+    healthcheck_url: str,
+    startup_healthcheck_timeout: int,
+    startup_healthcheck_poll_interval: float = 0.5,
 ):
     api_thread = RestApiDaemonThread(fast_api_command)
     api_thread.start()
     api_thread.wait_for_healthy(
-        healthcheck_url,
-        startup_healthcheck_timeout,
-        startup_healthcheck_poll_interval
+        healthcheck_url, startup_healthcheck_timeout, startup_healthcheck_poll_interval
     )
     return api_thread
-

@@ -11,6 +11,3 @@ from conclib.proxy.envelope import RequestEnvelope, ResponseEnvelope  # noqa: F4
 
 from conclib.utils.redisd.redisserverd import start_redis  # noqa: F401
 from conclib.utils.apid.apid import start_api  # noqa: F401
-
-
-

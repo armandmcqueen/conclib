@@ -13,7 +13,7 @@ from typing import Optional
 class Ticker(threading.Thread):
     def __init__(self, interval=10) -> None:
         self.shutdown_queue = queue.Queue()
-        self.interval: int = interval
+        self.interval: float = interval
         self.next_scheduled_time: Optional[int] = None
         super().__init__(name=f"{self.__class__.__name__}-{uuid.uuid4()}")
 
