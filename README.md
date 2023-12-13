@@ -93,7 +93,8 @@ class ExampleActor(conclib.Actor):
         # outside the actor system)
         if isinstance(message, conclib.RequestEnvelope):
             req_envelope = message
-            # Check which type of message was received and extract it
+            # Check which type of message was received and extract it. We cannot do an 
+            # isinstance() check due to how the RequestEnvelope is implemented.
             if req_envelope.matches(ExampleRequestMessage):
                 actor_message = req_envelope.extract(ExampleRequestMessage)
                 type(actor_message)  # ExampleRequestMessage
@@ -103,7 +104,7 @@ class ExampleActor(conclib.Actor):
                 # Send a response back to the sender
                 req_envelope.respond(ExampleResponseMessage())
             else:
-                raise RuntimeError("Unknown message type")
+                raise conclib.errors.UnexpectedMessageError(message)
                
 
 ```
@@ -169,7 +170,7 @@ class PrintTimeActor(conclib.Actor):
         if isinstance(message, PrintTimeMessage):
             print(datetime.datetime.utcnow().isoformat())
         else:
-            raise RuntimeError("Unknown message type")
+            raise conclib.errors.UnexpectedMessageError(message)
 
 ```
 
