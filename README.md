@@ -81,12 +81,14 @@ import conclib
 
 class ExampleActor(conclib.Actor):
     URN = "example_actor"
+    # URN is optional here, but recommended so that actor-to-actor 
+    # communication can use the urn string instead of the actor ref.
+    # If using the proxy, the URN is more-or-less required to be able
+    # to address the inbound messages.
+    
     def __init__(self):
-        # URN is optional here, but recommended so that actor-to-actor 
-        # communication can use the urn string instead of the actor ref.
-        # If using the proxy, the URN is more-or-less required to be able
-        # to address the inbound messages.
-        super().__init__(urn=self.URN)
+        
+        super().__init__()
 
     def on_receive(self, message):
         # Check if the message is a RequestEnvelope (i.e. a message that arrived from 
@@ -151,7 +153,7 @@ class PrintTimeActor(conclib.Actor):
 
     def __init__(self):
         self.ticker = PrintTimeTicker(self.URN)
-        super().__init__(urn=self.URN)
+        super().__init__()
     
     def on_start(self):
         # Start the ticker when the actor starts and not in __init__. This 
@@ -195,4 +197,36 @@ rest_daemon = conclib.start_api(
 
 # Shut down the REST API when you are done to prevent blocking the main process shutting down
 rest_daemon.shutdown()
+```
+
+## Usage - PeriodicActor
+
+A very common pattern right now is an actor that runs a function at a regular interval. This
+adds a bunch of boilerplate to every actor that needs this behavior. `PeriodicActor` is a
+convenience class that handles this boilerplate. It is an actor that has one or more child 
+tickers. Each `Ticker` sends a specific `ActorMessage` to the `PeriodicActor` at a regular
+interval. 
+
+NOTE: If you override `on_stop`, `on_start` or `on_failure` in a `PeriodicActor`, you must
+call `super()` (e.g. `super().on_stop()`) to make sure the tickers are started/stopped correctly.
+
+```python
+import conclib
+
+class ExampleTickMessage(conclib.ActorMessage):
+    pass
+
+
+class ExamplePeriodicActor(conclib.PeriodicActor):
+    URN = "example_periodic_actor"
+    # This is the type of message, and how often to send it
+    TICKS = {
+        ExampleTickMessage: 0.5,
+    }
+
+    def on_receive(self, message: conclib.ActorMessage) -> None:
+        if isinstance(message, ExampleTickMessage):
+            print("Tick")
+        else:
+            raise conclib.errors.UnexpectedMessageError(message)
 ```
