@@ -1,10 +1,13 @@
 import conclib
 
+
 class AccumulateMessage(conclib.ActorMessage):
     pass
 
+
 class CheckMessage(conclib.ActorMessage):
     pass
+
 
 class AccumulatorActor(conclib.PeriodicActor):
     URN = "accumulator"

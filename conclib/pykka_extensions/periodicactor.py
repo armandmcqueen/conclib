@@ -58,7 +58,8 @@ class ExampleTickMessage(conclib.ActorMessage):
 
 
 class ExamplePeriodicActor(PeriodicActor):
-    URN = "example_actor"
+    URN = "example_periodic_actor"
+    # This is the type of message, and how often to send it
     TICKS = {
         ExampleTickMessage: 0.5,
     }
