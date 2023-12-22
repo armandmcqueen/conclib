@@ -185,7 +185,7 @@ import conclib
 
 # Optionally start the REST API in a background thread. This isn't required
 # at all, but is offered as a conclib utility.
-# This launch the server and poll the healthcheck URL until it returns a 200
+# This will launch the server and poll the healthcheck URL until it returns a 200
 # or the timeout is reached.
 rest_daemon = conclib.start_api(
     fast_api_command="uvicorn conclib.utils.apid.example_api:app  --port 8000",
