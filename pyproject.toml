@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "conclib"
-version = "0.0.8"
+version = "0.0.9"
 authors = [
     {name = "Armand McQueen", email = "armandmcqueen@gmail.com"},
 ]

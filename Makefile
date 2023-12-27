@@ -19,3 +19,7 @@ lint: format
 .PHONY: format
 format:
 	ruff format .
+
+.PHONY: publish
+publish:
+	FLIT_USERNAME=__token__ FLIT_PASSWORD=$(shell cat .ignore/pypi_token) flit publish
